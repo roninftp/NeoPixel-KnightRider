@@ -41,36 +41,44 @@
 #include <Adafruit_NeoPixel.h>
 
 // SETUP YOUR OUTPUT PIN AND NUMBER OF PIXELS
-#define PIN A5
-#define NUM_PIXELS  16
+#define PIN 4  //Uses Digital Pin 4 of Adafruit Trinket Pro 5V 
+#define SWITCH 5 // Toggle Switch Attached to Pin 5
+#define NUM_PIXELS  30  // Adafruit 30 LED per meter reel
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_PIXELS, PIN, NEO_GRB + NEO_KHZ800);
+int switchState = 0;  //  Assigns switch state
 
 void setup() {
+  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
+  #if defined (__AVR_ATtiny85__)
+    if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
+  #endif
+  // End of trinket special code
+
+  pinMode(SWITCH, INPUT);
   strip.begin();
-  clearStrip(); // Initialize all pixels to 'off'
-  delay(1000);
+  strip.show(); // Initialize all pixels to 'off'
 }
 
 void loop() {
-  knightRider(3, 32, 4, 0xFF1000); // Cycles, Speed, Width, RGB Color (original orange-red)
-  knightRider(3, 32, 3, 0xFF00FF); // Cycles, Speed, Width, RGB Color (purple)
-  knightRider(3, 32, 2, 0x0000FF); // Cycles, Speed, Width, RGB Color (blue)
-  knightRider(3, 32, 5, 0xFF0000); // Cycles, Speed, Width, RGB Color (red)
-  knightRider(3, 32, 6, 0x00FF00); // Cycles, Speed, Width, RGB Color (green)
-  knightRider(3, 32, 7, 0xFFFF00); // Cycles, Speed, Width, RGB Color (yellow)
-  knightRider(3, 32, 8, 0x00FFFF); // Cycles, Speed, Width, RGB Color (cyan)
-  knightRider(3, 32, 2, 0xFFFFFF); // Cycles, Speed, Width, RGB Color (white)
-  clearStrip();
-  delay(2000);
-
-  // Iterate through a whole rainbow of colors
-  for(byte j=0; j<252; j+=7) {
-    knightRider(1, 16, 2, colorWheel(j)); // Cycles, Speed, Width, RGB Color
-  }
-  clearStrip();
-  delay(2000);
+  switchState = digitalRead(SWITCH);
+  while (switchState == HIGH) 
+  {
+    //knightRider(3, 32, 4, 0xFF1000); // Cycles, Speed, Width, RGB Color (original orange-red)
+    //knightRider(3, 32, 3, 0xFF00FF); // Cycles, Speed, Width, RGB Color (purple)
+    //knightRider(3, 32, 2, 0x0000FF); // Cycles, Speed, Width, RGB Color (blue)
+    knightRider(1, 32, 3, 0xFF0000); // Cycles, Speed, Width, RGB Color (red)
+    //knightRider(3, 32, 6, 0x00FF00); // Cycles, Speed, Width, RGB Color (green)
+    //knightRider(3, 32, 7, 0xFFFF00); // Cycles, Speed, Width, RGB Color (yellow)
+    //knightRider(3, 32, 8, 0x00FFFF); // Cycles, Speed, Width, RGB Color (cyan)
+    //knightRider(3, 32, 2, 0xFFFFFF); // Cycles, Speed, Width, RGB Color (white)
+    clearStrip();
+    //delay(2000);
+    switchState = digitalRead(SWITCH);
 }
+    
+  }
+  
 
 // Cycles - one cycle is scanning through all pixels left then right (or right then left)
 // Speed - how fast one cycle is (32 with 16 pixels is default KnightRider speed)
@@ -79,27 +87,36 @@ void loop() {
 //         Effective range is 2 - 8, 4 is default for 16 pixels.  Play with this.
 // Color - 32-bit packed RGB color value.  All pixels will be this color.
 // knightRider(cycles, speed, width, color);
+
 void knightRider(uint16_t cycles, uint16_t speed, uint8_t width, uint32_t color) {
   uint32_t old_val[NUM_PIXELS]; // up to 256 lights!
   // Larson time baby!
+  
   for(int i = 0; i < cycles; i++){
     for (int count = 1; count<NUM_PIXELS; count++) {
       strip.setPixelColor(count, color);
       old_val[count] = color;
+      switchState = digitalRead(SWITCH);
       for(int x = count; x>0; x--) {
         old_val[x-1] = dimColor(old_val[x-1], width);
         strip.setPixelColor(x-1, old_val[x-1]); 
+        switchState = digitalRead(SWITCH);
       }
+      switchState = digitalRead(SWITCH);
       strip.show();
       delay(speed);
     }
+    
     for (int count = NUM_PIXELS-1; count>=0; count--) {
       strip.setPixelColor(count, color);
       old_val[count] = color;
+      switchState = digitalRead(SWITCH);
       for(int x = count; x<=NUM_PIXELS ;x++) {
         old_val[x-1] = dimColor(old_val[x-1], width);
         strip.setPixelColor(x+1, old_val[x+1]);
+        switchState = digitalRead(SWITCH);
       }
+      switchState = digitalRead(SWITCH);
       strip.show();
       delay(speed);
     }
